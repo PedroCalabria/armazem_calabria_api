@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
+	<ProjectReference Include="..\ArmazemCalabria.Business\ArmazemCalabria.Business.csproj" />
+	<ProjectReference Include="..\ArmazemCalabria.CrossCutting\ArmazemCalabria.CrossCutting.csproj" />
+    <ProjectReference Include="..\ArmazemCalabria.Repository.Imp\ArmazemCalabria.Repository.Imp.csproj" />
+    <ProjectReference Include="..\ArmazemCalabria.Repository\ArmazemCalabria.Repository.csproj" />
+    <ProjectReference Include="..\ArmazemCalabria.Utils\ArmazemCalabria.Utils.csproj" />
+  </ItemGroup>
+
+</Project>
