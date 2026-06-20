@@ -1,0 +1,221 @@
+O projeto será um sistema de estoque de pisos, com front-end em React e back-end em .NET Core. 
+A aplicação deverá conter autenticação com JWT, controle de perfis, cadastro de usuários, 
+consulta de estoque, solicitação e aprovação de pedidos, upload de planilha para inclusão de estoque e 
+processamento assíncrono com Kafka.
+ 
+A modelagem ficará a cargo do desenvolvedor, mas deve obrigatoriamente utilizar o schema 'usuario' 
+para tabelas relacionadas a usuários e o schema 'armazem' para tabelas relacionadas a pisos, 
+estoque, pedidos e arquivos.
+ 
+Pensei em um sistema de estoque. Deve conter um login de usuarios. 
+Os perfis podem ser:
+   - Gestor: Pode fazer tudo menos realizar pedido(visualizar pedidos, estoques, aprovar pedidos);
+   - Lojista:
+	 - Externo: Pode consultar estoques e fazer pedidos (permissões);
+	 - Interno: Pode consultar estoques e aprovar pedidos pendentes;
+   
+O armazém deve trabalhar com Pisos. Os tipos de piso podem ser:
+	- Cerâmica;
+	- Porcelanato;
+	- Vinílico;
+	- Laminado;
+	- Madeira;
+	- Pedra natural;
+	- Cimento queimado;
+	
+Quero que seja usado inheritence mapping, as propriedades comuns aos pisos são: Nome, marca, cor, preço,
+largura, comprimento, espessura,  resistente a agua(bool), antiderrapamente, ambiente(externo ou interno),
+nível de resistencia, peso, acabamento(acetinado, polido, fosco).
+
+As propriedade Marca e nível de resistência devem ser tabelas de domínio a parte. Os tipos possíveis de piso também.
+
+Algums propriedades são específicas para cada tidpo de piso. Abaixo tem a listagem dos pisos e suas peculiaridades:
+	- Cerâmica: ClassePEI(número inteiro que marca a registência ao desgate);
+	- Porcelanato: Retificado(booleano). Tipo (técnico, esmaltado, polido, acetinado);
+	- Vinílico: Acústico(bool), Tipo instalação(colado, clicado);
+	- Laminado: Resistente a cupim;
+	- Madeira: Tipo da madeira(procurar uns 5 tipos de madeira diferentes), madeira nobre(bool);
+	- Pedra natural: Tipo da pedra (procurar uns 5 tipos de pedra diferentes), porosidade(bool), 
+			necessita impermeabilização(bool);
+	- Cimento queimado: Nenhuma propriedade diferente das comuns;
+	
+
+Funcionalidas(cada uma deve virar uma feature):
+	- Cadastro usuários: Criar tabelas que armazenem os usuários cadastrados.
+		As senhas dos usuários devem ser armazenadas utilizando hash seguro, nunca em texto puro;
+		- Gestor precisa da aprovação de outro gestor;
+	- Login: Criar tela de login usando JWT;
+	- Tela estoques(todos os perfis);
+		- Visualizar estoques, com filtros. Fazer uma grid;
+	- Tela pedidos:
+		- Gestor e Lojista interno: Podem ver os pedidos, aprovar pedidos pendentes;
+		- Lojista externo: Ver seus pedidos, solicitar novo pedido;
+			- Se houver estoque suficiente na hora o pedido é aprovado. Se não, fica pendente;
+	- Tela aprovação cadastro gestor:
+		- Apenas o gestor tem acesso, onde ele pode aprovar o cadastro de um outro gestor;
+	- Incluir estoque(Gestor e Lojista interno):
+		- A inclusão de estoque pode ser feita unicamente através de um arquivo xlsl.
+		- O modelo do xlsl vai ser discutido. Precisa de validação. O arquivo vai ser salvo em uma tabela e o kafka
+		vai sinalizar ao sistema que tem estoque novo a ser processado.
+	- Kafka: Implementar a funcionalidade de incluir estoque juntamente com o kafka;
+		- Producer: Após upar a planilha;
+		- Consumer: Ler a planilha e subir os estoques(bulk insert). Processar os pedidos pendentes.
+		- Caso o kafka falhe é interessante ter um endpoint para carga manual;
+			- Disponível apenas para gestor;
+	- Redis: Implementar Redis na consulta de estoques. A cada nova aprovação de pedido, atualizar os valores.
+
+A estrutura básica da aplicação é um sistema de login e um CRUD dos itens.
+Além das tabelas de usuários e itens, teremos também as tabelas de arquivos e pedidos.
+ 
+A aplicação deve conter validações básicas, como o de não aprovar pedidos se não houver estoque.
+Campos obrigatórios também são necessários no login e na tela de novos pedidos.
+ 
+O desenvolvedor me relatou também vontade de aprender mais sobre componentes controlados e não controlados, 
+além de hooks mais complexos. É possivel implementar isso em algumas da telas mencionadas acima?
+ 
+O sistema deve aplicar boas práticas REST, SOLID, validações básicas, 
+controle de autorização por perfil, uso adequado de tracking e no-tracking no EF Core, 
+auditoria de inserts e updates, logando usuário e hora(interceptador - OPCIONAL), 
+cache com Redis na consulta de estoque e bulk insert no processamento da planilha.
+Implementar middleware com controle de transações e de exceções. 
+
+Para fins didáticos, os logs devem ser gravados em arquivo .txt dentro da pasta do projeto (- OPCIONAL).
+
+Para o Inheritance Mapping existem 3 abordagens: TPH, TPT e TPC. Estude as 3, mas espero que use a TPT.
+
+
+Fase 1 — Base da aplicação
+
+Objetivo: construir o núcleo do sistema.
+
+Entregas:
+
+API .NET com estrutura em camadas;
+Front React simples;
+Cadastro de usuários;
+Login com JWT;
+Perfis: Gestor, Lojista Interno e Lojista Externo;
+Proteção de endpoints com [Authorize];
+Schemas separados: usuario e armazem.
+
+
+###########################################
+
+Fase 2 — Modelagem de pisos e estoque
+
+Objetivo: trabalhar EF Core, modelagem e inheritance mapping.
+
+Entregas:
+
+Tabela de pisos com herança;
+Tabelas de domínio:
+Tipo de piso;
+Marca;
+Nível de resistência;
+Acabamento;
+Ambiente;
+Cadastro/listagem de pisos;
+Consulta de estoque com filtros;
+Grid no React.
+
+##############################################
+
+Fase 3 — Pedidos
+
+Objetivo: aplicar regras de negócio.
+
+Entregas:
+
+Lojista externo solicita pedido;
+Sistema verifica estoque disponível;
+Se houver estoque, pedido é aprovado;
+Se não houver, fica pendente;
+Gestor e Lojista Interno podem visualizar e aprovar pedidos pendentes;
+Validação para não aprovar pedido sem estoque.
+
+
+##############################################
+
+Fase 4 — Upload de planilha e bulk
+
+Objetivo: trabalhar importação de dados.
+
+Entregas:
+
+Upload de arquivo .xlsx;
+Salvar metadados do arquivo em tabela;
+Validar layout da planilha;
+Ler registros;
+Inserir estoque com bulk insert;
+Registrar erros de processamento.
+
+#############################################
+
+Fase 5 — Kafka
+
+Objetivo: transformar o processamento de estoque em assíncrono.
+
+Entregas:
+
+Producer publica evento após upload da planilha;
+Consumer processa arquivo;
+Consumer insere estoque usando bulk;
+Consumer processa pedidos pendentes após entrada de estoque.
+
+
+##############################################
+
+Fase 6 — Redis
+
+Objetivo: trabalhar cache.
+
+Entregas:
+
+Cache na consulta de estoque;
+Invalidação/atualização do cache após:
+inclusão de estoque;
+aprovação de pedido;
+processamento de planilha.
+
+##############################################
+
+OPCIONAL:
+
+Componentes controlados
+
+Bons lugares para usar:
+
+Tela de login;
+Formulário de cadastro de usuário;
+Filtros da tela de estoque;
+Formulário de novo pedido.
+
+Exemplo de aprendizado:
+
+Inputs controlados com useState, validação em tempo real e envio para API.
+
+
+Componentes não controlados
+
+Bons lugares para usar:
+
+Upload de arquivo .xlsx;
+Inputs simples usando useRef;
+Formulário onde não precisa atualizar estado a cada digitação.
+
+Exemplo:
+
+Usar useRef para acessar o arquivo selecionado no upload da planilha.
+
+
+Assuntos técnicos principais: 
+ - JWT, 
+ - autorização/permissao, 
+ - modelagem relacional, 
+ - inheritance mapping, 
+ - bulk operations, 
+ - Kafka, 
+ - Redis, 
+ - upload de arquivos, 
+ - auditoria(interceptador), 
+ - logs;
