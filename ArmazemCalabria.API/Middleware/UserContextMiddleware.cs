@@ -61,11 +61,13 @@ namespace ArmazemCalabria.API.Middleware
                 var name = securityToken.Claims.GetClaimValue("name");
                 var email = securityToken.Claims.GetClaimValue("email");
                 var roles = securityToken.Claims.GetClaimValue("roles");
+                var idPerfil = securityToken.Claims.GetClaimValue("idRole");
 
                 _userContext.AddData("UserId", userId);
                 _userContext.AddData("name", name);
                 _userContext.AddData("email", email);
                 _userContext.AddData("roles", roles);
+                _userContext.AddData("IdPerfil", idPerfil);
             }
         }
 

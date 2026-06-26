@@ -19,6 +19,7 @@ namespace ArmazemCalabria.API.Configurations
 
             services.AddScoped<ITransactionManager, TransactionManager>();
             services.AddScoped<IUserContext, UserContext>();
+            services.AddHttpContextAccessor();
         }
 
         private static void InjectMiddlewares(IServiceCollection services)

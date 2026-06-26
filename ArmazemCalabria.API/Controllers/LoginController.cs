@@ -37,5 +37,12 @@ namespace ArmazemCalabria.API.Controllers
         {
             await _loginBusiness.SignUp(user);
         }
+
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            Response.ClearRefreshTokenCookie();
+            return Ok();
+        }
     }
 }

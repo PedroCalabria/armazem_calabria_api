@@ -107,6 +107,7 @@ namespace ArmazemCalabria.Business.Imp.Business
                     new(JwtRegisteredClaimNames.Email, usuario.Email),
                     new(JwtRegisteredClaimNames.Name,  usuario.Nome),
                     new("roles",                       usuario.Perfil.Descricao),
+                    new(ClaimTypes.Role,               usuario.Perfil.Descricao),
                     new("idRole",                      usuario.Perfil.IdPerfil.ToString()),
                     new("type",                        "access"),
                     new(JwtRegisteredClaimNames.Jti,   Guid.NewGuid().ToString())

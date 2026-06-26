@@ -8,6 +8,8 @@ namespace ArmazemCalabria.Repository
     {
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Piso> Pisos { get; set; }
+        public DbSet<Pedido> Pedidos { get; set; }
+        public DbSet<PedidoItem> PedidosItens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

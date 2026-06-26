@@ -1,4 +1,5 @@
-﻿using ArmazemCalabria.Repository;
+﻿using ArmazemCalabria.CrossCutting.Exceptions;
+using ArmazemCalabria.Repository;
 using ArmazemCalabria.Utils.Attributes;
 using Microsoft.AspNetCore.Http.Features;
 using System.Diagnostics;
@@ -32,13 +33,19 @@ namespace ArmazemCalabria.API.Middleware
                 stopwatch.Stop();
             }
             catch (Exception ex)
-            {
+             {
                 if (transactionRequired != null)
                     await _transactionManager.RollbackTransactionsAsync();
 
                 stopwatch.Stop();
 
-                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                context.Response.StatusCode = ex switch
+                {
+                    BusinessException => StatusCodes.Status400BadRequest,
+                    UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
+                    InvalidOperationException => StatusCodes.Status400BadRequest,
+                    _ => StatusCodes.Status500InternalServerError
+                };
                 await context.Response.WriteAsJsonAsync(new { error = ex.Message });
             }
         }

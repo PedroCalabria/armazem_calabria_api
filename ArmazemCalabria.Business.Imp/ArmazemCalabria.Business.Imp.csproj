@@ -8,6 +8,7 @@
 
   <ItemGroup>
 	<PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
+	<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	<ProjectReference Include="..\ArmazemCalabria.Business\ArmazemCalabria.Business.csproj" />
 	<ProjectReference Include="..\ArmazemCalabria.CrossCutting\ArmazemCalabria.CrossCutting.csproj" />
     <ProjectReference Include="..\ArmazemCalabria.Repository.Imp\ArmazemCalabria.Repository.Imp.csproj" />
