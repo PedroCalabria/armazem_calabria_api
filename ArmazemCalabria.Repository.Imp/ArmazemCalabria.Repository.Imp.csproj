@@ -15,6 +15,7 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\ArmazemCalabria.Entity\ArmazemCalabria.Entity.csproj" />
 	  <ProjectReference Include="..\ArmazemCalabria.Repository\ArmazemCalabria.Repository.csproj" />
+	  <ProjectReference Include="..\ArmazemCalabria.Utils\ArmazemCalabria.Utils.csproj" />
 	</ItemGroup>
 
 </Project>
