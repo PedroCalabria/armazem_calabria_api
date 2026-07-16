@@ -26,6 +26,9 @@ namespace ArmazemCalabria.Repository.IRepository
 
         Task RegistrarErrosAsync(IEnumerable<ErroImportacao> erros);
 
+        /// <summary>Carrega (sem tracking) os erros registrados para um arquivo, ordenados por linha.</summary>
+        Task<List<ErroImportacao>> ObterErrosPorArquivoAsync(int idArquivo);
+
         /// <summary>Carrega os domínios (descrição normalizada -> id) para resolução dos textos da planilha.</summary>
         Task<DominiosEstoqueDTO> ObterDominiosAsync();
     }
