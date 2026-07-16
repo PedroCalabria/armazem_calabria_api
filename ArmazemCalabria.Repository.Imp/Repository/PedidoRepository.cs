@@ -1,4 +1,5 @@
 using ArmazemCalabria.Entity.Entities;
+using ArmazemCalabria.Entity.Enum;
 using ArmazemCalabria.Repository.IRepository;
 using ArmazemCalabria.Repository.Imp.Repository.Base;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +31,17 @@ namespace ArmazemCalabria.Repository.Imp.Repository
                 .Include(p => p.Itens)
                     .ThenInclude(i => i.Piso)
                 .FirstOrDefaultAsync(p => p.IdPedido == idPedido);
+        }
+
+        public async Task<List<Pedido>> ObterPedidosPendentes()
+        {
+            // Rastreados (sem AsNoTracking) para permitir atualização de status na aprovação de sistema.
+            // Ordem FIFO: pedidos mais antigos são reavaliados primeiro.
+            return await Context.Pedidos
+                .Include(p => p.Itens)
+                .Where(p => p.IdStatus == StatusPedido.Pendente)
+                .OrderBy(p => p.DataCriacao)
+                .ToListAsync();
         }
 
         public async Task<Dictionary<int, (string Nome, int QuantidadeDisponivel)>> ObterDadosPisos(IEnumerable<int> idsPiso)

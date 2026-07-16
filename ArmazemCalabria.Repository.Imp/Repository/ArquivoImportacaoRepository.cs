@@ -56,6 +56,14 @@ namespace ArmazemCalabria.Repository.Imp.Repository
             await Context.SaveChangesAsync();
         }
 
+        public async Task<List<ErroImportacao>> ObterErrosPorArquivoAsync(int idArquivo)
+        {
+            return await Context.Set<ErroImportacao>().AsNoTracking()
+                .Where(e => e.IdArquivo == idArquivo)
+                .OrderBy(e => e.NumeroLinha)
+                .ToListAsync();
+        }
+
         public async Task<DominiosEstoqueDTO> ObterDominiosAsync()
         {
             var tiposPiso = await Context.Set<TipoPiso>().AsNoTracking()

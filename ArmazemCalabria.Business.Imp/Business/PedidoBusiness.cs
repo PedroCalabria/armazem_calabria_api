@@ -154,6 +154,35 @@ namespace ArmazemCalabria.Business.Imp.Business
             await _repository.UpdateAsync(pedido);
         }
 
+        public async Task ReprocessarPedidosPendentes()
+        {
+            // Aprovação automática de sistema: NÃO usa contexto HTTP (perfil/usuário logado),
+            // pois roda a partir do consumer Kafka. Percorre os pendentes em FIFO.
+            var pendentes = await _repository.ObterPedidosPendentes();
+
+            foreach (var pedido in pendentes)
+            {
+                // Lê o estoque atual a cada iteração: baixas anteriores no mesmo lote são consideradas.
+                var dadosPisos = await _repository.ObterDadosPisos(pedido.Itens.Select(i => i.IdPiso));
+
+                var estoqueSuficiente = pedido.Itens.All(item =>
+                    dadosPisos.TryGetValue(item.IdPiso, out var dados)
+                    && dados.QuantidadeDisponivel >= item.Quantidade);
+
+                if (!estoqueSuficiente)
+                    continue;
+
+                await BaixarEstoquePedido(pedido.Itens, dadosPisos);
+
+                pedido.IdStatus = StatusPedido.Aprovado;
+                pedido.DataAprovacao = DateTime.UtcNow;
+                pedido.DataAlteracao = DateTime.UtcNow;
+                // IdUsuarioAprovador permanece nulo: aprovação automática do sistema.
+
+                await _repository.UpdateAsync(pedido);
+            }
+        }
+
         #region private methods
 
         private int ObterIdUsuario()

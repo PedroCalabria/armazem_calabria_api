@@ -1,4 +1,5 @@
 using ArmazemCalabria.Business.IBusiness;
+using ArmazemCalabria.Business.IMessaging;
 using ArmazemCalabria.CrossCutting;
 using ArmazemCalabria.CrossCutting.Exceptions;
 using ArmazemCalabria.Entity.DTO;
@@ -18,7 +19,9 @@ namespace ArmazemCalabria.Business.Imp.Business
     public class ImportacaoEstoqueBusiness(
         IArquivoImportacaoRepository _repository,
         IUserContext _userContext,
-        IHttpContextAccessor _httpContextAccessor) : IImportacaoEstoqueBusiness
+        IHttpContextAccessor _httpContextAccessor,
+        IImportacaoEventPublisher _publisher,
+        IPedidoBusiness _pedidoBusiness) : IImportacaoEstoqueBusiness
     {
         private const long TamanhoMaximoBytes = 10 * 1024 * 1024; // 10 MB
         private const string ExtensaoXlsx = ".xlsx";
@@ -193,18 +196,60 @@ namespace ArmazemCalabria.Business.Imp.Business
         }
         #endregion
 
-        #region PublicadorImportacaoSincrono
+        #region PublicadorImportacaoAssincrono
+        // Fase 5 (Kafka): publica o evento e devolve null. O retorno null faz EnviarPlanilha
+        // responder apenas com o reconhecimento (status Pendente); o processamento fica a cargo do consumer.
         private async Task<ImportacaoEstoqueResultadoDTO?> PublicarAsync(int idArquivo)
         {
-            return await ProcessarAsync(idArquivo);
+            await _publisher.PublicarImportacaoAsync(idArquivo);
+            return null;
         }
         #endregion
 
         #region ProcessadorImportacaoEstoque
+
+        /// <summary>
+        /// Ponto de entrada do processamento usado pelo consumer Kafka e pelo endpoint de carga manual.
+        /// Processa o arquivo (leitura + bulk) e, havendo entrada de estoque, reprocessa os pedidos pendentes.
+        /// </summary>
+        public async Task<ImportacaoEstoqueResultadoDTO> ProcessarImportacaoAsync(int idArquivo)
+        {
+            var resultado = await ProcessarAsync(idArquivo);
+
+            // Só faz sentido reavaliar pedidos pendentes se de fato entrou/atualizou estoque.
+            if (resultado.TotalInseridos + resultado.TotalAtualizados > 0)
+                await _pedidoBusiness.ReprocessarPedidosPendentes();
+
+            return resultado;
+        }
+
+        /// <summary>
+        /// Consulta o status/resultado corrente do arquivo (usado pelo polling do frontend enquanto
+        /// o consumer processa em background). Carrega os erros apenas em estados terminais com erros.
+        /// </summary>
+        public async Task<ImportacaoEstoqueResultadoDTO> ConsultarStatusAsync(int idArquivo)
+        {
+            var arquivo = await _repository.ObterPorIdAsync(idArquivo)
+                ?? throw new BusinessException("Arquivo de importação não encontrado.");
+
+            var erros = arquivo.Status is StatusImportacao.ProcessadoComErros or StatusImportacao.Falha
+                ? await _repository.ObterErrosPorArquivoAsync(idArquivo)
+                : [];
+
+            // Inseridos/atualizados não são persistidos; a UI consome apenas TotalSucesso.
+            return MontarResultado(arquivo, erros, 0, 0);
+        }
+
         private async Task<ImportacaoEstoqueResultadoDTO> ProcessarAsync(int idArquivo)
         {
             var arquivo = await _repository.ObterPorIdAsync(idArquivo)
                 ?? throw new BusinessException("Arquivo de importação não encontrado.");
+
+            // Idempotência: só processa arquivos ainda Pendentes. Em redelivery do Kafka (entrega
+            // "ao menos uma vez") ou reprocessamento manual acidental, arquivos já em estado terminal
+            // são ignorados para não duplicar o estoque.
+            if (arquivo.Status != StatusImportacao.Pendente)
+                return MontarResultado(arquivo, [], 0, 0);
 
             arquivo.Status = StatusImportacao.Processando;
             await _repository.AtualizarAsync(arquivo);

@@ -7,6 +7,7 @@ namespace ArmazemCalabria.Repository.IRepository
     {
         Task<List<Pedido>> ConsultarPedidos(int? idUsuarioSolicitante);
         Task<Pedido?> ObterPedidoComItensParaAtualizacao(int idPedido);
+        Task<List<Pedido>> ObterPedidosPendentes();
         Task<Dictionary<int, (string Nome, int QuantidadeDisponivel)>> ObterDadosPisos(IEnumerable<int> idsPiso);
         Task<bool> BaixarEstoque(int idPiso, int quantidade);
     }
