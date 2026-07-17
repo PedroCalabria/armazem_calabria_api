@@ -56,6 +56,7 @@ namespace ArmazemCalabria.API.Controllers
         // síncrona um arquivo já enviado. Restrito ao Gestor. Reprocessa pedidos pendentes ao final.
         [Authorize(Roles = "Gestor")]
         [TransactionRequired]
+        [InvalidatesEstoqueCache]
         [ProducesResponseType(typeof(ImportacaoEstoqueResultadoDTO), StatusCodes.Status200OK)]
         [HttpPost("processar/{idArquivo:int}")]
         public async Task<ImportacaoEstoqueResultadoDTO> ProcessarManualmente(int idArquivo)

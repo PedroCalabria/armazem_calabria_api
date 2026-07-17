@@ -20,6 +20,7 @@ namespace ArmazemCalabria.API.Controllers
 
         [Authorize]
         [TransactionRequired]
+        [InvalidatesEstoqueCache]
         [ProducesResponseType(typeof(PedidoCriadoDTO), StatusCodes.Status200OK)]
         [HttpPost("solicitarPedido")]
         public async Task<PedidoCriadoDTO> SolicitarPedido([FromBody] SolicitarPedidoDTO dto)
@@ -29,6 +30,7 @@ namespace ArmazemCalabria.API.Controllers
 
         [Authorize]
         [TransactionRequired]
+        [InvalidatesEstoqueCache]
         [HttpPost("aprovarPedido")]
         public async Task AprovarPedido([FromQuery] int idPedido)
         {
@@ -37,6 +39,7 @@ namespace ArmazemCalabria.API.Controllers
 
         [Authorize]
         [TransactionRequired]
+        [InvalidatesEstoqueCache]
         [ProducesResponseType(typeof(AprovarPedidosResultadoDTO), StatusCodes.Status200OK)]
         [HttpPost("aprovarPedidos")]
         public async Task<AprovarPedidosResultadoDTO> AprovarPedidos([FromBody] AprovarPedidosDTO dto)

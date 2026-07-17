@@ -35,6 +35,8 @@ namespace ArmazemCalabria.API
 
             services.AddKafkaConfiguration(Configuration);
 
+            services.AddRedisConfiguration(Configuration);
+
             services.ConfigureCors(Configuration);
 
             services.ConfigureAuthentication(Configuration);
