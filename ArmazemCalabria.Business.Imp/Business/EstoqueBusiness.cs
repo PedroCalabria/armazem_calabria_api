@@ -1,4 +1,5 @@
 using ArmazemCalabria.Business.IBusiness;
+using ArmazemCalabria.Business.ICache;
 using ArmazemCalabria.CrossCutting.Exceptions;
 using ArmazemCalabria.Entity.DTO;
 using ArmazemCalabria.Entity.Enum;
@@ -7,7 +8,7 @@ using ArmazemCalabria.Utils.Extensions;
 
 namespace ArmazemCalabria.Business.Imp.Business
 {
-    public class EstoqueBusiness(IEstoqueRepository _repository) : IEstoqueBusiness
+    public class EstoqueBusiness(IEstoqueRepository _repository, IEstoqueCache _cache) : IEstoqueBusiness
     {
         public async Task<List<EstoqueGridItemDTO>> ConsultarEstoque(EstoqueFiltroDTO filtro)
         {
@@ -22,7 +23,10 @@ namespace ArmazemCalabria.Business.Imp.Business
                 IdsAcabamento = ConverterParaIds(filtro.Acabamento)
             };
 
-            return await _repository.ConsultarEstoque(filtroConsulta);
+            // Cache-aside (Fase 6): serve do Redis; em miss, consulta o banco e grava.
+            return await _cache.ObterOuGravarAsync(
+                filtroConsulta,
+                () => _repository.ConsultarEstoque(filtroConsulta));
         }
 
         public Task<EstoqueOpcoesFiltroDTO> ObterOpcoesFiltro()

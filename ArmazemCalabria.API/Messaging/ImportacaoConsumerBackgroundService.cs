@@ -1,4 +1,5 @@
 using ArmazemCalabria.Business.IBusiness;
+using ArmazemCalabria.Business.ICache;
 using ArmazemCalabria.CrossCutting.Configurations;
 using ArmazemCalabria.Entity.DTO;
 using ArmazemCalabria.Entity.Enum;
@@ -101,6 +102,7 @@ namespace ArmazemCalabria.API.Messaging
             using var scope = _scopeFactory.CreateScope();
             var transactionManager = scope.ServiceProvider.GetRequiredService<ITransactionManager>();
             var importacaoBusiness = scope.ServiceProvider.GetRequiredService<IImportacaoEstoqueBusiness>();
+            var estoqueCache = scope.ServiceProvider.GetRequiredService<IEstoqueCache>();
 
             try
             {
@@ -109,6 +111,9 @@ namespace ArmazemCalabria.API.Messaging
                 var resultado = await importacaoBusiness.ProcessarImportacaoAsync(evento.IdArquivo);
 
                 await transactionManager.CommitTransactionAsync();
+
+                // Invalida o cache de estoque APÓS o commit (bulk insert + reprocessamento de pendentes).
+                await estoqueCache.InvalidarAsync();
 
                 _logger.LogInformation(
                     "Arquivo {IdArquivo} processado. Status={Status}, Inseridos={Inseridos}, Atualizados={Atualizados}, Erros={Erros}.",

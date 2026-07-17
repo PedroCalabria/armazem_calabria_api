@@ -26,5 +26,16 @@ services:
     volumes:
       - kafka-data:/var/lib/kafka/data
 
+  # Redis (Fase 6): cache da consulta de estoque.
+  # A aplicação conecta em localhost:6379.
+  redis:
+    image: redis:7-alpine
+    container_name: armazem-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
 volumes:
   kafka-data:
+  redis-data:

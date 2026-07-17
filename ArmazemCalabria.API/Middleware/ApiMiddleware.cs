@@ -1,4 +1,5 @@
-﻿using ArmazemCalabria.CrossCutting.Exceptions;
+﻿using ArmazemCalabria.Business.ICache;
+using ArmazemCalabria.CrossCutting.Exceptions;
 using ArmazemCalabria.Repository;
 using ArmazemCalabria.Utils.Attributes;
 using Microsoft.AspNetCore.Http.Features;
@@ -6,15 +7,18 @@ using System.Diagnostics;
 
 namespace ArmazemCalabria.API.Middleware
 {
-    public class ApiMiddleware(ITransactionManager transactionManager) : IMiddleware
+    public class ApiMiddleware(ITransactionManager transactionManager, IEstoqueCache estoqueCache) : IMiddleware
     {
         private readonly ITransactionManager _transactionManager = transactionManager;
+        private readonly IEstoqueCache _estoqueCache = estoqueCache;
 
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
             Stopwatch stopwatch = new();
             stopwatch.Start();
-            var transactionRequired = context.Features.Get<IEndpointFeature>()?.Endpoint?.Metadata.GetMetadata<TransactionRequiredAttribute>();
+            var endpointMetadata = context.Features.Get<IEndpointFeature>()?.Endpoint?.Metadata;
+            var transactionRequired = endpointMetadata?.GetMetadata<TransactionRequiredAttribute>();
+            var invalidatesCache = endpointMetadata?.GetMetadata<InvalidatesEstoqueCacheAttribute>();
             try
             {
                 if (transactionRequired != null)
@@ -29,6 +33,10 @@ namespace ArmazemCalabria.API.Middleware
                 {
                     await next.Invoke(context);
                 }
+
+                // Invalida o cache de estoque APÓS o commit (apenas no caminho de sucesso).
+                if (invalidatesCache != null)
+                    await _estoqueCache.InvalidarAsync();
 
                 stopwatch.Stop();
             }
